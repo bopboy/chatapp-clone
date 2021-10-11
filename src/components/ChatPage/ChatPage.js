@@ -1,6 +1,6 @@
 import React from 'react'
 import MainPanel from './MainPanel/MainPanel'
-import SidePanel from './SidePanel/SadePanel'
+import SidePanel from './SidePanel/SidePanel'
 
 function ChatPage() {
     return (

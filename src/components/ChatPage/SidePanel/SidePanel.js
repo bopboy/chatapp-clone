@@ -4,7 +4,7 @@ import Favorited from './Favorited'
 import ChatRooms from './ChatRooms'
 import DirectMessage from './DirectMessage'
 
-function SadePanel() {
+function SidePanel() {
     return (
         <div style={{ backgroundColor: "#7B83E8", padding: '2rem', minHeight: '100vh', color: 'white', minWidth: '275px' }}>
             <UserPanel />
@@ -15,4 +15,4 @@ function SadePanel() {
     )
 }
 
-export default SadePanel
+export default SidePanel

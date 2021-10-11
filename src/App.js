@@ -8,7 +8,7 @@ import RegisterPage from './components/RegisterPage/RegisterPage';
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import firebase from './firebase'
 
-import { setUser } from './redux/actions/user_actions';
+import { setUser, clearUser } from './redux/actions/user_actions';
 
 function App() {
   const history = useHistory()
@@ -19,7 +19,10 @@ function App() {
       if (user) {
         history.push("/")
         dispatch(setUser(user))
-      } else history.push("/login")
+      } else {
+        history.push("/login")
+        dispatch(clearUser())
+      }
     })
   }, [])
   return (
