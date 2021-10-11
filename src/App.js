@@ -25,7 +25,7 @@ function App() {
       }
     })
   }, [])
-  return (
+  return ( 
     <Switch>
       <Route exact path='/' component={ChatPage} />
       <Route exact path='/login' component={LoginPage} />

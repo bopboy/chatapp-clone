@@ -1,16 +1,47 @@
-import React from 'react'
-import { useSelector } from 'react-redux'
+import React, { useRef } from 'react'
+import { useSelector, useDispatch } from 'react-redux'
 import { IoIosChatboxes } from 'react-icons/io'
 import { Dropdown, Image } from 'react-bootstrap'
+import mime from 'mime-types'
 
-import { getAuth, signOut } from "firebase/auth";
+import { getAuth, signOut, updateProfile } from "firebase/auth";
 import firebase from '../../../firebase'
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { getDatabase, ref as ref2, set } from 'firebase/database';
+
+import { setPhotoURL } from '../../../redux/actions/user_actions'
 
 function UserPanel() {
+    const dispatch = useDispatch()
     const user = useSelector(state => state.user.currentUser)
+    const inputOpenImageRef = useRef()
     const handleLogout = () => {
         const auth = getAuth(firebase);
         signOut(auth)
+    }
+    const handleOpenImageRef = () => { inputOpenImageRef.current.click() }
+    const handleUploadImage = async (e) => {
+        const file = e.target.files[0]
+        const metadata = { contentType: mime.lookup(file.name) }
+        try {
+            const storage = getStorage()
+            const userImages = ref(storage, `user_image/${user.uid}`)
+            await uploadBytes(userImages, file, metadata)
+            const downloadURL = await getDownloadURL(ref(storage, `user_image/${user.uid}`))
+
+            const auth = getAuth(firebase);
+            const currentUser = auth.currentUser
+            await updateProfile(currentUser, {
+                photoURL: downloadURL
+            })
+            dispatch(setPhotoURL(downloadURL))
+            const database = getDatabase(firebase)
+            set(ref2(database, 'users/' + currentUser.uid), {
+                image: downloadURL
+            })
+        } catch (err) {
+            console.log(err)
+        }
     }
     return (
         <div>
@@ -27,10 +58,15 @@ function UserPanel() {
                     </Dropdown.Toggle>
 
                     <Dropdown.Menu>
-                        <Dropdown.Item href="#/action-1">프로필 사진 변경</Dropdown.Item>
+                        <Dropdown.Item onClick={handleOpenImageRef}>프로필 사진 변경</Dropdown.Item>
                         <Dropdown.Item onClick={handleLogout}>로그아웃</Dropdown.Item>
                     </Dropdown.Menu>
                 </Dropdown>
+                <input
+                    type="file" style={{ display: 'none' }} accept="image/jpeg, image/png"
+                    ref={inputOpenImageRef}
+                    onChange={handleUploadImage}
+                />
             </div>
         </div >
     )
