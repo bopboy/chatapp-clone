@@ -2,7 +2,7 @@ import React, { Component } from 'react'
 import { FaRegSmileWink, FaPlus } from 'react-icons/fa'
 import { Modal, Button, Form } from 'react-bootstrap'
 import { connect } from 'react-redux'
-import { getDatabase, ref, push, set, onValue } from "firebase/database";
+import { getDatabase, ref, push, set, onValue, off } from "firebase/database";
 import { setCurrentChatRoom } from '../../../redux/actions/chatRoom_actions';
 
 export class ChatRooms extends Component {
@@ -14,6 +14,7 @@ export class ChatRooms extends Component {
         activeChatRoomId: ""
     }
     componentDidMount() { this.AddChatRoomsListener() }
+    componentWillUnmount() { off(this.state.chatRoomRef) }
     setFirstChatRoom = () => {
         const firstChatRoom = this.state.chatRooms[0]
         if (this.state.firstLoad && this.state.chatRooms.length > 0) {
