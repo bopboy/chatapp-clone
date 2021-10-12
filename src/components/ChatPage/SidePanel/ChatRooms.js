@@ -3,21 +3,32 @@ import { FaRegSmileWink, FaPlus } from 'react-icons/fa'
 import { Modal, Button, Form } from 'react-bootstrap'
 import { connect } from 'react-redux'
 import { getDatabase, ref, push, set, onValue } from "firebase/database";
+import { setCurrentChatRoom } from '../../../redux/actions/chatRoom_actions';
 
 export class ChatRooms extends Component {
     state = {
         show: false, name: "", description: "",
         chatRoomRef: ref(getDatabase(), "chatRooms"),
-        chatRooms: []
+        chatRooms: [],
+        firstLoad: true,
+        activeChatRoomId: ""
     }
     componentDidMount() { this.AddChatRoomsListener() }
+    setFirstChatRoom = () => {
+        const firstChatRoom = this.state.chatRooms[0]
+        if (this.state.firstLoad && this.state.chatRooms.length > 0) {
+            this.props.dispatch(setCurrentChatRoom(firstChatRoom))
+            this.setState({ activeChatRoomId: firstChatRoom.id })
+        }
+        this.setState({ firstLoad: false })
+    }
     AddChatRoomsListener = () => {
         const chatRoomsArray = []
         onValue(this.state.chatRoomRef, snapshot => {
             snapshot.forEach(childSnapshot => {
                 chatRoomsArray.push(childSnapshot.val())
             })
-            this.setState({ chatRooms: chatRoomsArray })
+            this.setState({ chatRooms: chatRoomsArray }, () => this.setFirstChatRoom())
             console.log('chatRoomsArray', this.state.chatRooms)
         }, { onlyOnce: false })
     }
@@ -44,9 +55,16 @@ export class ChatRooms extends Component {
             this.setState({ name: "", description: "", show: false })
         } catch (err) { alert(err) }
     }
+    changeChatRoom = (room) => {
+        this.props.dispatch(setCurrentChatRoom(room))
+        this.setState({ activeChatRoomId: room.id })
+    }
     renderChatRooms = (chatRooms) =>
         chatRooms.length > 0 && chatRooms.map(room => (
-            <li key={room.id}># {room.name}</li>
+            <li key={room.id}
+                onClick={() => this.changeChatRoom(room)}
+                style={{ backgroundColor: room.id === this.state.activeChatRoomId && "#ffffff45" }}
+            ># {room.name}</li>
         ))
 
     render() {
