@@ -27,7 +27,7 @@ function MessageHeader() {
                 </div>
                 <Row>
                     <Col>
-                        <Accordion flush>
+                        <Accordion>
                             <Card>
                                 <Card.Header style={{ padding: '0 1rem' }}>
                                     <Accordion.Toggle as={Button} variant="link" eventKey="0" style={{ textDecoration: 'none' }}>Click me!</Accordion.Toggle>
