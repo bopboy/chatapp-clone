@@ -1,7 +1,9 @@
-import React, { useState } from 'react'
+import React, { useState, useRef } from 'react'
 import { Form, ProgressBar, Row, Col } from 'react-bootstrap'
 import { getDatabase, ref, serverTimestamp, set, push } from "firebase/database";
 import { useSelector } from 'react-redux';
+import mime from 'mime-types'
+import { getStorage, ref as ref2, uploadBytesResumable } from 'firebase/storage'
 
 function MessageForm() {
     const chatRoom = useSelector(state => state.chatRoom.currentChatRoom)
@@ -9,7 +11,9 @@ function MessageForm() {
     const [content, setContent] = useState("")
     const [errors, setErrors] = useState([])
     const [loading, setLoading] = useState(false)
+    const [percentage, setPercentage] = useState(0)
     const messageRef = ref(getDatabase(), "messages")
+    const inputOpenImageRef = useRef()
 
     const handleChange = (e) => { setContent(e.target.value) }
     const createMessage = (fileUrl = null) => {
@@ -38,6 +42,23 @@ function MessageForm() {
             setTimeout(() => { setErrors([]) }, 5000)
         }
     }
+    const handleOpenImageRef = () => { inputOpenImageRef.current.click() }
+    const handleUploadImage = (e) => {
+        const file = e.target.files[0]
+        if (!file) return
+        const filePath = `message/public/${file.name}`
+        const metadata = { contentType: mime.lookup(file.name) }
+        try {
+            const storage = getStorage()
+            const image = ref2(storage, filePath)
+            const uploadTask = uploadBytesResumable(image, file)
+            uploadTask.on('state_changed', snapshot => {
+                const percentage = Math.round(snapshot.bytesTransferred / snapshot.totalBytes * 100)
+                console.log(percentage)
+                setPercentage(percentage)
+            }, null, null)
+        } catch (e) { alert(e) }
+    }
     return (
         <div>
             <Form onSubmit={handleSubmit}>
@@ -45,7 +66,10 @@ function MessageForm() {
                     <Form.Control as="textarea" rows={3} value={content} onChange={handleChange} />
                 </Form.Group>
             </Form>
-            <ProgressBar variant="warning" label="60%" now={60} style={{ marginTop: '1rem' }} />
+            {
+                (percentage > 0 && percentage < 100) &&
+                <ProgressBar variant="warning" label={`${percentage}%`} now={percentage} style={{ marginTop: '1rem' }} />
+            }
             <div>
                 {errors.map(err => <p style={{ color: 'red' }} key={err}>{err}</p>)}
             </div>
@@ -54,9 +78,10 @@ function MessageForm() {
                     <button onClick={handleSubmit} style={{ width: '100%' }} className="message-form-button">SEND</button>
                 </Col>
                 <Col>
-                    <button style={{ width: '100%' }} className="message-form-button">UPLOAD</button>
+                    <button onClick={handleOpenImageRef} style={{ width: '100%' }} className="message-form-button">UPLOAD</button>
                 </Col>
             </Row>
+            <input type="file" ref={inputOpenImageRef} style={{ display: 'none' }} onChange={handleUploadImage} />
         </div>
     )
 }

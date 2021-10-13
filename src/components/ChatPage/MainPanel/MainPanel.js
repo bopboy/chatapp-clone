@@ -36,7 +36,7 @@ export class MainPanel extends Component {
                 <MessageHeader />
                 <div style={{ width: '100%', height: '450px', border: '.2rem solid #ececec', borderRadius: '4px', padding: '1rem', marginBottom: '1rem', overflow: 'auto' }}>
                     {this.renderMessage(messages)}
-                </div>
+                </div> 
                 <MessageForm />
             </div >
         )
