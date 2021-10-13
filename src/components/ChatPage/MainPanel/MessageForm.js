@@ -22,7 +22,6 @@ function MessageForm() {
         return message
     }
     const handleSubmit = async () => {
-        console.log('test')
         if (!content) {
             setErrors(prev => prev.concat("메시지를 입력하세요"))
             return
