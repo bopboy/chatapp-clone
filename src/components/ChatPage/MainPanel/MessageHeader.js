@@ -3,7 +3,7 @@ import { Container, Row, Col, InputGroup, FormControl, Image, Accordion, Card, B
 import { FaLock } from 'react-icons/fa'
 import { MdFavorite } from 'react-icons/md'
 import { AiOutlineSearch } from 'react-icons/ai'
-function MessageHeader() {
+function MessageHeader({ handleSearchChange }) {
     return (
         <div style={{ width: '100%', height: '172px', border: '.2rem solid #ececec', borderRadius: '4px', padding: '1rem', marginBottom: '1rem' }}>
             <Container>
@@ -13,6 +13,7 @@ function MessageHeader() {
                         <InputGroup className="mb-3">
                             <InputGroup.Text id="basic-addon1"><h5><AiOutlineSearch /></h5></InputGroup.Text>
                             <FormControl
+                                onChange={handleSearchChange}
                                 placeholder="Search Message"
                                 aria-label="Search"
                                 aria-describedby="basic-addon1"

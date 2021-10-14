@@ -6,7 +6,10 @@ import { connect } from 'react-redux'
 import { getDatabase, onValue, ref, off } from 'firebase/database'
 
 export class MainPanel extends Component {
-    state = { messages: [], messageRef: ref(getDatabase(), "messages"), messageLoading: true }
+    state = {
+        messages: [], messageRef: ref(getDatabase(), "messages"), messageLoading: true,
+        searchTerm: "", searchResults: [], searchLoading: false
+    }
     componentDidMount() {
         const { chatRoom } = this.props
         if (chatRoom) this.addMessageListener(chatRoom.id)
@@ -28,15 +31,31 @@ export class MainPanel extends Component {
             <Message key={message.timestamp} message={message} user={this.props.user} />
         ))
     )
-
+    handleSearchChange = e => {
+        this.setState(
+            { searchTerm: e.target.value, searchLoading: true },
+            () => this.handleSearchMessages()
+        )
+    }
+    handleSearchMessages = () => {
+        const chatRoomMessages = [...this.state.messages]
+        const regex = new RegExp(this.state.searchTerm, "gi")
+        const searchResults = chatRoomMessages.reduce((acc, message) => {
+            if (message.content && message.content.match(regex) || message.user.name.match(regex)) acc.push(message)
+            return acc
+        }, [])
+        this.setState({ searchResults })
+    }
     render() {
-        const { messages } = this.state
+        const { messages, searchTerm, searchResults } = this.state
         return (
             <div style={{ padding: '2rem 2rem 0 2rem' }} >
-                <MessageHeader />
+                <MessageHeader handleSearchChange={this.handleSearchChange} />
                 <div style={{ width: '100%', height: '450px', border: '.2rem solid #ececec', borderRadius: '4px', padding: '1rem', marginBottom: '1rem', overflow: 'auto' }}>
-                    {this.renderMessage(messages)}
-                </div> 
+                    {searchTerm ?
+                        this.renderMessage(searchResults) :
+                        this.renderMessage(messages)}
+                </div>
                 <MessageForm />
             </div >
         )
