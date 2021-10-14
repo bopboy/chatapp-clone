@@ -7,6 +7,7 @@ import { getStorage, ref as ref2, uploadBytesResumable, getDownloadURL } from 'f
 
 function MessageForm() {
     const chatRoom = useSelector(state => state.chatRoom.currentChatRoom)
+    const isPrivate = useSelector(state => state.chatRoom.isPrivate)
     const user = useSelector(state => state.user.currentUser)
     const [content, setContent] = useState("")
     const [errors, setErrors] = useState([])
@@ -43,10 +44,14 @@ function MessageForm() {
         }
     }
     const handleOpenImageRef = () => { inputOpenImageRef.current.click() }
+    const getPath = () => {
+        if (isPrivate) return `/message/private/${chatRoom.id}`
+        else return `/message/public`
+    }
     const handleUploadImage = (e) => {
         const file = e.target.files[0]
         if (!file) return
-        const filePath = `message/public/${file.name}`
+        const filePath = `${getPath()}/${file.name}`
         const metadata = { contentType: mime.lookup(file.name) }
         setLoading(true)
         try {

@@ -20,7 +20,7 @@ export class DirectMessage extends Component {
                     user['status'] = 'offline'
                     userArray.push(user)
                     this.setState({ users: userArray })
-                }
+                } 
             })
         })
 

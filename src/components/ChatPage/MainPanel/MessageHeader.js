@@ -1,14 +1,18 @@
 import React from 'react'
 import { Container, Row, Col, InputGroup, FormControl, Image, Accordion, Card, Button } from 'react-bootstrap'
-import { FaLock } from 'react-icons/fa'
+import { FaLock, FaLockOpen } from 'react-icons/fa'
 import { MdFavorite } from 'react-icons/md'
 import { AiOutlineSearch } from 'react-icons/ai'
+import { useSelector } from 'react-redux'
+
 function MessageHeader({ handleSearchChange }) {
+    const chatRoom = useSelector(state => state.chatRoom.currentChatRoom)
+    const isPrivate = useSelector(state => state.chatRoom.isPrivate)
     return (
         <div style={{ width: '100%', height: '172px', border: '.2rem solid #ececec', borderRadius: '4px', padding: '1rem', marginBottom: '1rem' }}>
             <Container>
                 <Row>
-                    <Col><h2><FaLock /> Chat Room Name <MdFavorite /></h2></Col>
+                    <Col><h2>{isPrivate ? <FaLock /> : <FaLockOpen />} {chatRoom && chatRoom.name} <MdFavorite /></h2></Col>
                     <Col>
                         <InputGroup className="mb-3">
                             <InputGroup.Text id="basic-addon1"><h5><AiOutlineSearch /></h5></InputGroup.Text>
