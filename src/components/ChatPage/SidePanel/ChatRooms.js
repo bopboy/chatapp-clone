@@ -3,7 +3,7 @@ import { FaRegSmileWink, FaPlus } from 'react-icons/fa'
 import { Modal, Button, Form } from 'react-bootstrap'
 import { connect } from 'react-redux'
 import { getDatabase, ref, push, set, onValue, off } from "firebase/database";
-import { setCurrentChatRoom } from '../../../redux/actions/chatRoom_actions';
+import { setCurrentChatRoom, setPrivateChatRoom } from '../../../redux/actions/chatRoom_actions';
 
 export class ChatRooms extends Component {
     state = {
@@ -58,6 +58,7 @@ export class ChatRooms extends Component {
     }
     changeChatRoom = (room) => {
         this.props.dispatch(setCurrentChatRoom(room))
+        this.props.dispatch(setPrivateChatRoom(false))
         this.setState({ activeChatRoomId: room.id })
     }
     renderChatRooms = (chatRooms) =>
