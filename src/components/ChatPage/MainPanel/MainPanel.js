@@ -22,7 +22,7 @@ export class MainPanel extends Component {
             })
             this.setState({ messages: messageArray, messageLoading: false })
             messageArray = []
-            console.log(this.state.messages)
+            // console.log(this.state.messages)
         }, { onlyOnce: false })
     }
     renderMessage = (messages) => (

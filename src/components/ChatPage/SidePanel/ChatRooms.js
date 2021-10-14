@@ -1,20 +1,25 @@
 import React, { Component } from 'react'
 import { FaRegSmileWink, FaPlus } from 'react-icons/fa'
-import { Modal, Button, Form } from 'react-bootstrap'
+import { Modal, Button, Form, Badge } from 'react-bootstrap'
 import { connect } from 'react-redux'
-import { getDatabase, ref, push, set, onValue, off } from "firebase/database";
+import { getDatabase, ref, push, set, onValue, off, child, onChildAdded } from "firebase/database";
 import { setCurrentChatRoom, setPrivateChatRoom } from '../../../redux/actions/chatRoom_actions';
 
 export class ChatRooms extends Component {
     state = {
         show: false, name: "", description: "",
         chatRoomRef: ref(getDatabase(), "chatRooms"),
+        messagesRef: ref(getDatabase(), "messages"),
         chatRooms: [],
         firstLoad: true,
-        activeChatRoomId: ""
+        activeChatRoomId: "",
+        notifications: []
     }
     componentDidMount() { this.AddChatRoomsListener() }
-    componentWillUnmount() { off(this.state.chatRoomRef) }
+    componentWillUnmount() {
+        off(this.state.chatRoomRef)
+        this.state.chatRooms.forEach(room => off(ref(getDatabase(), "messages" + room.id)))
+    }
     setFirstChatRoom = () => {
         const firstChatRoom = this.state.chatRooms[0]
         if (this.state.firstLoad && this.state.chatRooms.length > 0) {
@@ -24,14 +29,51 @@ export class ChatRooms extends Component {
         this.setState({ firstLoad: false })
     }
     AddChatRoomsListener = () => {
-        const chatRoomsArray = []
-        onValue(this.state.chatRoomRef, snapshot => {
-            snapshot.forEach(childSnapshot => {
-                chatRoomsArray.push(childSnapshot.val())
+        let chatRoomsArray = []
+        // onValue(this.state.chatRoomRef, snapshot => {
+        //     snapshot.forEach(childSnapshot => {
+        //         chatRoomsArray.push(childSnapshot.val())
+        //         this.addNotificationListener(childSnapshot.key)
+        //     })
+        //     this.setState({ chatRooms: chatRoomsArray }, () => this.setFirstChatRoom())
+        //     chatRoomsArray = []
+        // }, { onlyOnce: false })
+        onChildAdded(this.state.chatRoomRef, DataSnapshot => {
+            chatRoomsArray.push(DataSnapshot.val());
+            this.setState({ chatRooms: chatRoomsArray },
+                () => this.setFirstChatRoom());
+            this.addNotificationListener(DataSnapshot.key);
+        })
+    }
+    addNotificationListener = (chatRoomID) => {
+        let { messagesRef } = this.state;
+        onValue(child(messagesRef, chatRoomID), DataSnapshot => {
+            if (this.props.chatRoom) {
+                this.handleNotification(
+                    chatRoomID,
+                    this.props.chatRoom.id,
+                    this.state.notifications,
+                    DataSnapshot
+                )
+            }
+        })
+    }
+    handleNotification = (chatRoomID, currentChatRoomID, notifications, snapshot) => {
+        let lastTotal = 0
+        let numChildren = snapshot.size
+        let index = notifications.findIndex(noti => noti.id === chatRoomID)
+        if (index === -1) {
+            notifications.push({
+                id: chatRoomID, total: numChildren, lastKnownTotal: numChildren, count: 0
             })
-            this.setState({ chatRooms: chatRoomsArray }, () => this.setFirstChatRoom())
-            console.log('chatRoomsArray', this.state.chatRooms)
-        }, { onlyOnce: false })
+        } else {
+            if (chatRoomID !== currentChatRoomID) {
+                lastTotal = notifications[index].lastKnownTotal
+                if (numChildren - lastTotal > 0) notifications[index].count = numChildren - lastTotal
+            }
+            notifications[index].total = numChildren
+        }
+        this.setState({ notifications })
     }
     handleClose = () => this.setState({ show: false })
     handleShow = () => this.setState({ show: true })
@@ -60,13 +102,34 @@ export class ChatRooms extends Component {
         this.props.dispatch(setCurrentChatRoom(room))
         this.props.dispatch(setPrivateChatRoom(false))
         this.setState({ activeChatRoomId: room.id })
+        this.clearNotifications()
+    }
+    clearNotifications = () => {
+        let index = this.state.notifications.findIndex(noti => noti.id === this.props.chatRoom.id)
+        if (index !== -1) {
+            let updateNotifications = [...this.state.notifications]
+            updateNotifications[index].lastKnownTotal = this.state.notifications[index].total
+            updateNotifications[index].count = 0
+            this.setState({ notifications: updateNotifications })
+        }
+    }
+    getNotificationCount = (room) => {
+        let count = 0
+        this.state.notifications.forEach(noti => {
+            if (noti.id === room.id) count = noti.count
+        })
+        if (count > 0) return count
     }
     renderChatRooms = (chatRooms) =>
         chatRooms.length > 0 && chatRooms.map(room => (
             <li key={room.id}
                 onClick={() => this.changeChatRoom(room)}
-                style={{ backgroundColor: room.id === this.state.activeChatRoomId && "#ffffff45" }}
-            ># {room.name}</li>
+                style={{ backgroundColor: room.id === this.state.activeChatRoomId && "#ffffff45", display: 'flex', justifyContent: 'space-between' }}
+            ># {room.name}
+                <Badge style={{ marginTop: '4px', backgroundColor: '#ff000095' }} variant="danger">
+                    {this.getNotificationCount(room)}
+                </Badge>
+            </li>
         ))
 
     render() {
@@ -120,6 +183,6 @@ export class ChatRooms extends Component {
 }
 
 const mapStateToProps = state => {
-    return { user: state.user.currentUser }
+    return { user: state.user.currentUser, chatRoom: state.chatRoom.currentChatRoom }
 }
 export default connect(mapStateToProps)(ChatRooms)
