@@ -3,7 +3,7 @@ import { Form, ProgressBar, Row, Col } from 'react-bootstrap'
 import { getDatabase, ref, serverTimestamp, set, push } from "firebase/database";
 import { useSelector } from 'react-redux';
 import mime from 'mime-types'
-import { getStorage, ref as ref2, uploadBytesResumable } from 'firebase/storage'
+import { getStorage, ref as ref2, uploadBytesResumable, getDownloadURL } from 'firebase/storage'
 
 function MessageForm() {
     const chatRoom = useSelector(state => state.chatRoom.currentChatRoom)
@@ -48,15 +48,28 @@ function MessageForm() {
         if (!file) return
         const filePath = `message/public/${file.name}`
         const metadata = { contentType: mime.lookup(file.name) }
+        setLoading(true)
         try {
             const storage = getStorage()
             const image = ref2(storage, filePath)
             const uploadTask = uploadBytesResumable(image, file)
-            uploadTask.on('state_changed', snapshot => {
-                const percentage = Math.round(snapshot.bytesTransferred / snapshot.totalBytes * 100)
-                console.log(percentage)
-                setPercentage(percentage)
-            }, null, null)
+            uploadTask.on('state_changed',
+                snapshot => {
+                    const percentage = Math.round(snapshot.bytesTransferred / snapshot.totalBytes * 100)
+                    console.log(percentage)
+                    setPercentage(percentage)
+                },
+                err => {
+                    console.error(err)
+                    setLoading(false)
+                },
+                () => {
+                    getDownloadURL(image).then(url => {
+                        console.log('downloadURL', url)
+                        set(push(ref(getDatabase(), "messages/" + chatRoom.id)), createMessage(url))
+                    })
+                }
+            )
         } catch (e) { alert(e) }
     }
     return (
