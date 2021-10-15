@@ -1,10 +1,10 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Container, Row, Col, InputGroup, FormControl, Image, Accordion, Card, Button } from 'react-bootstrap'
 import { FaLock, FaLockOpen } from 'react-icons/fa'
 import { MdFavorite, MdFavoriteBorder } from 'react-icons/md'
 import { AiOutlineSearch } from 'react-icons/ai'
 import { useSelector } from 'react-redux'
-import { getDatabase, ref, child, update, remove } from "firebase/database";
+import { getDatabase, ref, child, update, remove, onValue } from "firebase/database";
 
 function MessageHeader({ handleSearchChange }) {
     const chatRoom = useSelector(state => state.chatRoom.currentChatRoom)
@@ -12,10 +12,22 @@ function MessageHeader({ handleSearchChange }) {
     const user = useSelector(state => state.user.currentUser)
     const [isFavorited, setIsFavorited] = useState(false)
     const usersRef = ref(getDatabase(), "users");
+    useEffect(() => { if (chatRoom && user) addFavoriteListener(chatRoom.id, user.uid) }, [])
+    const addFavoriteListener = (chatRoomID, userID) => {
+        onValue(child(usersRef, `${userID}/favorited`), data => {
+            if (data.val() !== null) {
+                const chatRoomIDs = Object.keys(data.val())
+                const isAleardyFavorited = chatRoomIDs.includes(chatRoomID)
+                setIsFavorited(isAleardyFavorited)
+            }
+        })
+    }
     const handleFavorite = () => {
         if (isFavorited) {
+            setIsFavorited(prev => !prev)
             remove(child(usersRef, `${user.uid}/favorited/${chatRoom.id}`))
         } else {
+            setIsFavorited(prev => !prev)
             update(child(usersRef, `${user.uid}/favorited`), {
                 [chatRoom.id]: {
                     name: chatRoom.name,
@@ -24,7 +36,6 @@ function MessageHeader({ handleSearchChange }) {
                 }
             })
         }
-        setIsFavorited(prev => !prev)
     }
     return (
         <div style={{ width: '100%', height: '172px', border: '.2rem solid #ececec', borderRadius: '4px', padding: '1rem', marginBottom: '1rem' }}>
