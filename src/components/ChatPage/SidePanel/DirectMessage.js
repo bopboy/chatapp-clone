@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import { FaRegSmile } from 'react-icons/fa'
-import { getDatabase, ref, onValue } from 'firebase/database'
+import { getDatabase, ref, onValue, onChildAdded } from 'firebase/database'
 import { connect } from 'react-redux'
 import { setCurrentChatRoom, setPrivateChatRoom } from '../../../redux/actions/chatRoom_actions'
 
@@ -12,18 +12,26 @@ export class DirectMessage extends Component {
     addUserListener = (currentUserID) => {
         const { userRef } = this.state
         let userArray = []
-        onValue(userRef, snapshot => {
-            snapshot.forEach(childSnapshot => {
-                if (currentUserID !== childSnapshot.key) {
-                    const user = childSnapshot.val()
-                    user['uid'] = childSnapshot.key
-                    user['status'] = 'offline'
-                    userArray.push(user)
-                    this.setState({ users: userArray })
-                } 
-            })
+        // onValue(userRef, snapshot => {
+        //     snapshot.forEach(childSnapshot => {
+        //         if (currentUserID !== childSnapshot.key) {
+        //             const user = childSnapshot.val()
+        //             user['uid'] = childSnapshot.key
+        //             user['status'] = 'offline'
+        //             userArray.push(user)
+        //             this.setState({ users: userArray })
+        //         }
+        //     })
+        // })
+        onChildAdded(userRef, DataSnapshot => {
+            if (currentUserID !== DataSnapshot.key) {
+                let user = DataSnapshot.val();
+                user["uid"] = DataSnapshot.key;
+                user["status"] = "offline";
+                userArray.push(user)
+                this.setState({ users: userArray })
+            }
         })
-
     }
     renderDirectMessages = users =>
         users.length > 0 && users.map(user => (
