@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import { FaRegSmileBeam } from 'react-icons/fa'
-import { ref, getDatabase, onChildAdded, onChildRemoved, child } from 'firebase/database'
+import { ref, getDatabase, onChildAdded, onChildRemoved, child, off } from 'firebase/database'
 import { connect } from 'react-redux'
 import { setCurrentChatRoom, setPrivateChatRoom } from '../../../redux/actions/chatRoom_actions'
 
@@ -10,7 +10,16 @@ export class Favorited extends Component {
         favoriteChatRooms: [],
         activeChatRoomID: ''
     }
-    componentDidMount() { if (this.props.user) this.addListener(this.props.user.uid) }
+    componentDidMount() {
+        if (this.props.user) this.addListener(this.props.user.uid)
+    }
+    componentWillUnmount() {
+        if (this.props.user) { this.removeListener(this.props.user.uid) }
+    }
+    removeListener = (userID) => {
+        const { userRef } = this.state
+        off(child(userRef, `${userID}/favorited`))
+    }
     addListener = (userID) => {
         const { userRef } = this.state
         onChildAdded(child(userRef, `${userID}/favorited`), snapshot => {
@@ -23,7 +32,7 @@ export class Favorited extends Component {
             this.setState({ favoriteChatRooms: filtered })
         })
     }
-    chanageChatRoom = (room) => {
+    changeChatRoom = (room) => {
         this.props.dispatch(setCurrentChatRoom(room))
         this.props.dispatch(setPrivateChatRoom(false))
         this.setState({ activeChatRoomID: room.id })
@@ -32,7 +41,7 @@ export class Favorited extends Component {
         rooms.length > 0 &&
         rooms.map(room => (
             <li key={room.id}
-                onClick={() => this.chanageChatRoom(room)}
+                onClick={() => this.changeChatRoom(room)}
                 style={{ backgroundColor: room.id === this.state.activeChatRoomID && "#ffffff45" }}
             ># {room.name}</li>
         ))
