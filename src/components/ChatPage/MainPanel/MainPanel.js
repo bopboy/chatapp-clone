@@ -3,7 +3,8 @@ import Message from './Message'
 import MessageHeader from './MessageHeader'
 import MessageForm from './MessageForm'
 import { connect } from 'react-redux'
-import { getDatabase, onValue, ref } from 'firebase/database'
+import { getDatabase, ref, onChildAdded, child } from 'firebase/database'
+import { setUserPosts } from '../../../redux/actions/chatRoom_actions'
 
 export class MainPanel extends Component {
     state = {
@@ -15,15 +16,31 @@ export class MainPanel extends Component {
         if (chatRoom) this.addMessageListener(chatRoom.id)
     }
     addMessageListener = (chatRoomID) => {
-        let messageArray = []
-        onValue(ref(getDatabase(), 'messages/' + chatRoomID), snapshot => {
-            snapshot.forEach(childSnapshot => {
-                messageArray.push(childSnapshot.val())
+        let messagesArray = []
+        // onValue(ref(getDatabase(), 'messages/' + chatRoomID), snapshot => {
+        //     snapshot.forEach(childSnapshot => {
+        //         messageArray.push(childSnapshot.val())
+        //     })
+        //     this.setState({ messages: messageArray, messageLoading: false })
+        //     messageArray = []
+        // }, { onlyOnce: false })
+        let { messageRef } = this.state;
+        onChildAdded(child(messageRef, chatRoomID), snapshot => {
+            messagesArray.push(snapshot.val());
+            this.setState({
+                messages: messagesArray,
+                messagesLoading: false
             })
-            this.setState({ messages: messageArray, messageLoading: false })
-            messageArray = []
-            // console.log(this.state.messages)
-        }, { onlyOnce: false })
+            this.userPostsCount(messagesArray)
+        })
+    }
+    userPostsCount = (messages) => {
+        const userPosts = messages.reduce((acc, message) => {
+            if (message.user.name in acc) acc[message.user.name].count += 1
+            else acc[message.user.name] = { image: message.user.image, count: 1 }
+            return acc
+        }, {})
+        this.props.dispatch(setUserPosts(userPosts))
     }
     renderMessage = (messages) => (
         messages.length > 0 &&
