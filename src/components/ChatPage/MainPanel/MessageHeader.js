@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Container, Row, Col, InputGroup, FormControl, Image, Accordion, Card, Button } from 'react-bootstrap'
+import { Container, Row, Col, InputGroup, FormControl, Image, Accordion, Card, Button, Media } from 'react-bootstrap'
 import { FaLock, FaLockOpen } from 'react-icons/fa'
 import { MdFavorite, MdFavoriteBorder } from 'react-icons/md'
 import { AiOutlineSearch } from 'react-icons/ai'
@@ -12,6 +12,7 @@ function MessageHeader({ handleSearchChange }) {
     const user = useSelector(state => state.user.currentUser)
     const [isFavorited, setIsFavorited] = useState(false)
     const usersRef = ref(getDatabase(), "users");
+    const userPosts = useSelector(state => state.chatRoom.userPosts)
     useEffect(() => {
         if (chatRoom && user) {
             addFavoriteListener(chatRoom.id, user.uid)
@@ -42,6 +43,19 @@ function MessageHeader({ handleSearchChange }) {
             })
         }
     }
+    const renderUserPosts = (userPosts) =>
+        Object.entries(userPosts)
+            .sort((a, b) => b[1].count - a[1].count)
+            .map(([key, val], i) => (
+                <Media key={i} style={{ marginBottom: '3px', display: 'flex' }}>
+                    <img style={{ borderRadius: '10px', marginRight: '10px' }} width={36} height={36} className="mr-3" src={val.image} alt={val.name} />
+                    <Media.Body>
+                        <h6>{key}</h6>
+                        <p>{val.count}개</p>
+                    </Media.Body>
+                </Media>
+            ))
+
     return (
         <div style={{ width: '100%', height: '172px', border: '.2rem solid #ececec', borderRadius: '4px', padding: '1rem', marginBottom: '1rem' }}>
             <Container>
@@ -94,10 +108,10 @@ function MessageHeader({ handleSearchChange }) {
                         <Accordion>
                             <Card>
                                 <Card.Header style={{ padding: '0 1rem' }}>
-                                    <Accordion.Toggle as={Button} variant="link" eventKey="0" style={{ textDecoration: 'none' }}>Click me!</Accordion.Toggle>
+                                    <Accordion.Toggle as={Button} variant="link" eventKey="0" style={{ textDecoration: 'none' }}>Posts Count</Accordion.Toggle>
                                 </Card.Header>
                                 <Accordion.Collapse eventKey="0">
-                                    <Card.Body>Hello! I'm the body</Card.Body>
+                                    <Card.Body>{userPosts && renderUserPosts(userPosts)}</Card.Body>
                                 </Accordion.Collapse>
                             </Card>
                         </Accordion>
