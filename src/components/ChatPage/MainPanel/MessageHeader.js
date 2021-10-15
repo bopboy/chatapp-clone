@@ -12,7 +12,12 @@ function MessageHeader({ handleSearchChange }) {
     const user = useSelector(state => state.user.currentUser)
     const [isFavorited, setIsFavorited] = useState(false)
     const usersRef = ref(getDatabase(), "users");
-    useEffect(() => { if (chatRoom && user) addFavoriteListener(chatRoom.id, user.uid) }, [])
+    useEffect(() => {
+        if (chatRoom && user) {
+            addFavoriteListener(chatRoom.id, user.uid)
+            // return () => off(child(usersRef, `${user.uid}/favorited`))
+        }
+    }, [chatRoom, user])
     const addFavoriteListener = (chatRoomID, userID) => {
         onValue(child(usersRef, `${userID}/favorited`), data => {
             if (data.val() !== null) {
@@ -60,20 +65,27 @@ function MessageHeader({ handleSearchChange }) {
                         </InputGroup>
                     </Col>
                 </Row>
-                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                    <p>
-                        <Image src="" /> {" "} user name
-                    </p>
-                </div>
+                {!isPrivate &&
+                    <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                        <p>
+                            <Image
+                                src={chatRoom && chatRoom.createdBy.image}
+                                roundedCircle
+                                style={{ width: '30px', height: '30px' }}
+                            />
+                            {`${chatRoom && chatRoom.createdBy.name}`}
+                        </p>
+                    </div>
+                }
                 <Row>
                     <Col>
                         <Accordion>
                             <Card>
                                 <Card.Header style={{ padding: '0 1rem' }}>
-                                    <Accordion.Toggle as={Button} variant="link" eventKey="0" style={{ textDecoration: 'none' }}>Click me!</Accordion.Toggle>
+                                    <Accordion.Toggle as={Button} variant="link" eventKey="0" style={{ textDecoration: 'none' }}>Description</Accordion.Toggle>
                                 </Card.Header>
                                 <Accordion.Collapse eventKey="0">
-                                    <Card.Body>Hello! I'm the body</Card.Body>
+                                    <Card.Body>{chatRoom && chatRoom.description}</Card.Body>
                                 </Accordion.Collapse>
                             </Card>
                         </Accordion>

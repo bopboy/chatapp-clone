@@ -32,7 +32,9 @@ function LoginPage() {
                 <input type="password" name="password" {...register("password", { required: true, minLength: 6 })} />
                 {errors.password && errors.password.type === 'required' && <p>비번 입력은 필수입니다</p>}
                 {errors.password && errors.password.type === 'minLength' && <p>비번은 최소 6자여야 합니다</p>}
-
+                {errorFromSubmit &&
+                    <p>{errorFromSubmit}</p>
+                }
                 <input type="submit" value="SUBMIT" disabled={loading} />
                 <Link style={{ color: 'gray', textDecoration: 'none' }} to="register">아직 아이디가 없다면...</Link>
             </form>

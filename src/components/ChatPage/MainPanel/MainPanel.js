@@ -3,7 +3,7 @@ import Message from './Message'
 import MessageHeader from './MessageHeader'
 import MessageForm from './MessageForm'
 import { connect } from 'react-redux'
-import { getDatabase, onValue, ref, off } from 'firebase/database'
+import { getDatabase, onValue, ref } from 'firebase/database'
 
 export class MainPanel extends Component {
     state = {
@@ -41,7 +41,7 @@ export class MainPanel extends Component {
         const chatRoomMessages = [...this.state.messages]
         const regex = new RegExp(this.state.searchTerm, "gi")
         const searchResults = chatRoomMessages.reduce((acc, message) => {
-            if (message.content && message.content.match(regex) || message.user.name.match(regex)) acc.push(message)
+            if ((message.content && message.content.match(regex)) || message.user.name.match(regex)) acc.push(message)
             return acc
         }, [])
         this.setState({ searchResults })

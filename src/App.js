@@ -13,6 +13,7 @@ import { setUser, clearUser } from './redux/actions/user_actions';
 function App() {
   const history = useHistory()
   const dispatch = useDispatch()
+  const isLoading = useSelector(state => state.user.isLoading)
   useEffect(() => {
     const auth = getAuth(firebase);
     onAuthStateChanged(auth, user => {
@@ -24,8 +25,9 @@ function App() {
         dispatch(clearUser())
       }
     })
-  }, [])
-  return ( 
+  }, [history, dispatch])
+  if (isLoading) { return (<div>...로딩 중</div>) }
+  return (
     <Switch>
       <Route exact path='/' component={ChatPage} />
       <Route exact path='/login' component={LoginPage} />

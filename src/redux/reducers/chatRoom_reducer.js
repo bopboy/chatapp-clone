@@ -7,7 +7,7 @@ const initialChatRoomState = {
     isPrivate: false
 }
 
-export default function (state = initialChatRoomState, action) {
+export default function chatRoom(state = initialChatRoomState, action) {
     switch (action.type) {
         case SET_CURRENT_CHAT_ROOM:
             return { ...state, currentChatRoom: action.payload }

@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import { FaRegSmile } from 'react-icons/fa'
-import { getDatabase, ref, onValue, onChildAdded } from 'firebase/database'
+import { getDatabase, ref, onChildAdded } from 'firebase/database'
 import { connect } from 'react-redux'
 import { setCurrentChatRoom, setPrivateChatRoom } from '../../../redux/actions/chatRoom_actions'
 

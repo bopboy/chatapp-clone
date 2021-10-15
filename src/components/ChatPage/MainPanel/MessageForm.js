@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react'
 import { Form, ProgressBar, Row, Col } from 'react-bootstrap'
-import { getDatabase, ref, serverTimestamp, set, push } from "firebase/database";
+import { getDatabase, ref, serverTimestamp, set, push, child } from "firebase/database";
 import { useSelector } from 'react-redux';
 import mime from 'mime-types'
 import { getStorage, ref as ref2, uploadBytesResumable, getDownloadURL } from 'firebase/storage'
@@ -13,7 +13,7 @@ function MessageForm() {
     const [errors, setErrors] = useState([])
     const [loading, setLoading] = useState(false)
     const [percentage, setPercentage] = useState(0)
-    const messageRef = ref(getDatabase(), "messages")
+    const messagesRef = ref(getDatabase(), "messages")
     const inputOpenImageRef = useRef()
 
     const handleChange = (e) => { setContent(e.target.value) }
@@ -57,7 +57,7 @@ function MessageForm() {
         try {
             const storage = getStorage()
             const image = ref2(storage, filePath)
-            const uploadTask = uploadBytesResumable(image, file)
+            const uploadTask = uploadBytesResumable(image, file, metadata)
             uploadTask.on('state_changed',
                 snapshot => {
                     const percentage = Math.round(snapshot.bytesTransferred / snapshot.totalBytes * 100)
@@ -71,7 +71,7 @@ function MessageForm() {
                 () => {
                     getDownloadURL(image).then(url => {
                         console.log('downloadURL', url)
-                        set(push(ref(getDatabase(), "messages/" + chatRoom.id)), createMessage(url))
+                        set(push(child(messagesRef, chatRoom.id)), createMessage(url))
                     })
                 }
             )
@@ -93,10 +93,16 @@ function MessageForm() {
             </div>
             <Row>
                 <Col>
-                    <button onClick={handleSubmit} style={{ width: '100%' }} className="message-form-button">SEND</button>
+                    <button
+                        onClick={handleSubmit} style={{ width: '100%' }} className="message-form-button"
+                        disabled={loading ? true : false}
+                    >SEND</button>
                 </Col>
                 <Col>
-                    <button onClick={handleOpenImageRef} style={{ width: '100%' }} className="message-form-button">UPLOAD</button>
+                    <button
+                        onClick={handleOpenImageRef} style={{ width: '100%' }} className="message-form-button"
+                        disabled={loading ? true : false}
+                    >UPLOAD</button>
                 </Col>
             </Row>
             <input type="file" ref={inputOpenImageRef} style={{ display: 'none' }} onChange={handleUploadImage} />
