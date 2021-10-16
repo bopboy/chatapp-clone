@@ -7,6 +7,7 @@ import { getDatabase, ref, onChildAdded, child, onChildRemoved, off } from 'fire
 import { setUserPosts } from '../../../redux/actions/chatRoom_actions'
 
 export class MainPanel extends Component {
+    messageEndRef = React.createRef()
     state = {
         messages: [],
         messageRef: ref(getDatabase(), "messages"),
@@ -27,8 +28,11 @@ export class MainPanel extends Component {
         off(this.state.messageRef);
         this.removeListeners(this.state.listenersList)
     }
+    componentDidUpdate() {
+        if (this.messageEndRef) this.messageEndRef.scrollIntoView({ behavior: 'smooth' })
+    }
     removeListeners = (listeners) => {
-        let { typingRef } = this.state;
+        // let { typingRef } = this.state;
         listeners.forEach(listener => { off(ref(getDatabase(), `typing/${listener.id}`), listener.event) })
         // listeners.forEach(listener => { off(ref(child(typingRef, listener.id)), listener.event) })
     }
@@ -113,9 +117,11 @@ export class MainPanel extends Component {
                 <div style={{ width: '100%', height: '600px', border: '.2rem solid #ececec', borderRadius: '4px', padding: '1rem', marginBottom: '1rem', overflow: 'auto' }}>
                     {searchTerm ?
                         this.renderMessage(searchResults) :
-                        this.renderMessage(messages)}
+                        this.renderMessage(messages)
+                    }
+                    {typingUsers.length > 0 && this.renderTypingUsers(typingUsers)}
+                    <div ref={node => (this.messageEndRef = node)} />
                 </div>
-                {typingUsers.length > 0 && this.renderTypingUsers(typingUsers)}
                 <MessageForm />
             </div >
         )
