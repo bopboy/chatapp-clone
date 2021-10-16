@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react'
 import { Form, ProgressBar, Row, Col } from 'react-bootstrap'
-import { getDatabase, ref, serverTimestamp, set, push, child } from "firebase/database";
+import { getDatabase, ref, serverTimestamp, set, push, child, remove } from "firebase/database";
 import { useSelector } from 'react-redux';
 import mime from 'mime-types'
 import { getStorage, ref as ref2, uploadBytesResumable, getDownloadURL } from 'firebase/storage'
@@ -14,6 +14,7 @@ function MessageForm() {
     const [loading, setLoading] = useState(false)
     const [percentage, setPercentage] = useState(0)
     const messagesRef = ref(getDatabase(), "messages")
+    const typingRef = ref(getDatabase(), "typing")
     const inputOpenImageRef = useRef()
 
     const handleChange = (e) => { setContent(e.target.value) }
@@ -34,6 +35,7 @@ function MessageForm() {
         setLoading(true)
         try {
             await set(push(ref(getDatabase(), "messages/" + chatRoom.id)), createMessage())
+            remove(child(typingRef, `${chatRoom.id}/${user.uid}`))
             setLoading(false)
             setContent("")
             setErrors([])
@@ -77,16 +79,20 @@ function MessageForm() {
             )
         } catch (e) { alert(e) }
     }
+    const handleKeyDown = (event) => {
+        if (content) set(child(typingRef, `${chatRoom.id}/${user.uid}`), { userID: user.displayName })
+        else remove(child(typingRef, `${chatRoom.id}/${user.uid}`))
+    }
     return (
         <div>
             <Form onSubmit={handleSubmit}>
                 <Form.Group controlId="exampleForm.ControlTextarea1">
-                    <Form.Control as="textarea" rows={3} value={content} onChange={handleChange} />
+                    <Form.Control as="textarea" rows={3} value={content} onChange={handleChange} onKeyDown={handleKeyDown} />
                 </Form.Group>
             </Form>
             {
                 (percentage > 0 && percentage < 100) &&
-                <ProgressBar variant="warning" label={`${percentage}%`} now={percentage} style={{ marginTop: '1rem' }} />
+                <ProgressBar variant="warning" label={`${percentage} % `} now={percentage} style={{ marginTop: '1rem' }} />
             }
             <div>
                 {errors.map(err => <p style={{ color: 'red' }} key={err}>{err}</p>)}

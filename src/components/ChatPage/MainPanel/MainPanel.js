@@ -3,27 +3,27 @@ import Message from './Message'
 import MessageHeader from './MessageHeader'
 import MessageForm from './MessageForm'
 import { connect } from 'react-redux'
-import { getDatabase, ref, onChildAdded, child } from 'firebase/database'
+import { getDatabase, ref, onChildAdded, child, onChildRemoved } from 'firebase/database'
 import { setUserPosts } from '../../../redux/actions/chatRoom_actions'
 
 export class MainPanel extends Component {
     state = {
-        messages: [], messageRef: ref(getDatabase(), "messages"), messageLoading: true,
-        searchTerm: "", searchResults: [], searchLoading: false
+        messages: [],
+        messageRef: ref(getDatabase(), "messages"),
+        typingRef: ref(getDatabase(), "typing"),
+        messageLoading: true,
+        searchTerm: "", searchResults: [], searchLoading: false,
+        typingUsers: []
     }
     componentDidMount() {
         const { chatRoom } = this.props
-        if (chatRoom) this.addMessageListener(chatRoom.id)
+        if (chatRoom) {
+            this.addMessageListener(chatRoom.id)
+            this.addTypingListener(chatRoom.id)
+        }
     }
     addMessageListener = (chatRoomID) => {
         let messagesArray = []
-        // onValue(ref(getDatabase(), 'messages/' + chatRoomID), snapshot => {
-        //     snapshot.forEach(childSnapshot => {
-        //         messageArray.push(childSnapshot.val())
-        //     })
-        //     this.setState({ messages: messageArray, messageLoading: false })
-        //     messageArray = []
-        // }, { onlyOnce: false })
         let { messageRef } = this.state;
         onChildAdded(child(messageRef, chatRoomID), snapshot => {
             messagesArray.push(snapshot.val());
@@ -32,6 +32,23 @@ export class MainPanel extends Component {
                 messagesLoading: false
             })
             this.userPostsCount(messagesArray)
+        })
+    }
+    addTypingListener = (chatRoomID) => {
+        let typingUsers = []
+        let { typingRef } = this.state;
+        onChildAdded(child(typingRef, chatRoomID), snapshot => {
+            if (snapshot.key !== this.props.user.uid) {
+                typingUsers = typingUsers.concat({ id: snapshot.key, name: snapshot.val() })
+                this.setState({ typingUsers })
+            }
+        })
+        onChildRemoved(child(typingRef, chatRoomID), snapshot => {
+            const index = typingUsers.findIndex(user => user.id === snapshot.key)
+            if (index !== -1) {
+                typingUsers = typingUsers.filter(user => user.id !== snapshot.key)
+                this.setState({ typingUsers })
+            }
         })
     }
     userPostsCount = (messages) => {
@@ -63,8 +80,12 @@ export class MainPanel extends Component {
         }, [])
         this.setState({ searchResults })
     }
+    renderTypingUsers = (typingUsers) =>
+        typingUsers.length > 0 &&
+        typingUsers.map(user => (<span key={user.name.userID}>{user.name.userID} 님이 입력 중입니다...</span>))
+
     render() {
-        const { messages, searchTerm, searchResults } = this.state
+        const { messages, searchTerm, searchResults, typingUsers } = this.state
         return (
             <div style={{ padding: '2rem 2rem 0 2rem' }} >
                 <MessageHeader handleSearchChange={this.handleSearchChange} />
@@ -73,6 +94,7 @@ export class MainPanel extends Component {
                         this.renderMessage(searchResults) :
                         this.renderMessage(messages)}
                 </div>
+                {typingUsers.length > 0 && this.renderTypingUsers(typingUsers)}
                 <MessageForm />
             </div >
         )
