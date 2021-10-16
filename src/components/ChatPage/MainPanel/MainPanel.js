@@ -3,7 +3,7 @@ import Message from './Message'
 import MessageHeader from './MessageHeader'
 import MessageForm from './MessageForm'
 import { connect } from 'react-redux'
-import { getDatabase, ref, onChildAdded, child, onChildRemoved } from 'firebase/database'
+import { getDatabase, ref, onChildAdded, child, onChildRemoved, off } from 'firebase/database'
 import { setUserPosts } from '../../../redux/actions/chatRoom_actions'
 
 export class MainPanel extends Component {
@@ -13,7 +13,8 @@ export class MainPanel extends Component {
         typingRef: ref(getDatabase(), "typing"),
         messageLoading: true,
         searchTerm: "", searchResults: [], searchLoading: false,
-        typingUsers: []
+        typingUsers: [],
+        listenersList: []
     }
     componentDidMount() {
         const { chatRoom } = this.props
@@ -21,6 +22,15 @@ export class MainPanel extends Component {
             this.addMessageListener(chatRoom.id)
             this.addTypingListener(chatRoom.id)
         }
+    }
+    componentWillUnmount() {
+        off(this.state.messageRef);
+        this.removeListeners(this.state.listenersList)
+    }
+    removeListeners = (listeners) => {
+        let { typingRef } = this.state;
+        listeners.forEach(listener => { off(ref(getDatabase(), `typing/${listener.id}`), listener.event) })
+        // listeners.forEach(listener => { off(ref(child(typingRef, listener.id)), listener.event) })
     }
     addMessageListener = (chatRoomID) => {
         let messagesArray = []
@@ -43,6 +53,7 @@ export class MainPanel extends Component {
                 this.setState({ typingUsers })
             }
         })
+        this.addToListenersList(chatRoomID, this.state.typingRef, "child_added")
         onChildRemoved(child(typingRef, chatRoomID), snapshot => {
             const index = typingUsers.findIndex(user => user.id === snapshot.key)
             if (index !== -1) {
@@ -50,6 +61,16 @@ export class MainPanel extends Component {
                 this.setState({ typingUsers })
             }
         })
+        this.addToListenersList(chatRoomID, this.state.typingRef, "child_removed")
+    }
+    addToListenersList = (id, ref, event) => {
+        const index = this.state.listenersList.findIndex(listener => {
+            return (listener.id === id && listener.ref === ref && listener.event === event)
+        })
+        if (index === -1) {
+            const newListener = { id, ref, event }
+            this.setState({ listenersList: this.state.listenersList.concat(newListener) })
+        }
     }
     userPostsCount = (messages) => {
         const userPosts = messages.reduce((acc, message) => {
