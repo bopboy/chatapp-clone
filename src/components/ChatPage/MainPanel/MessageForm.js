@@ -29,7 +29,8 @@ function MessageForm() {
     }
     const handleSubmit = async () => {
         if (!content) {
-            setErrors(prev => prev.concat("메시지를 입력하세요"))
+            // setErrors(prev => prev.concat("메시지를 입력하세요"))
+            setErrors(["메시지를 입력하세요"])
             return
         }
         setLoading(true)
