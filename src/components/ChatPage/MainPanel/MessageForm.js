@@ -79,7 +79,9 @@ function MessageForm() {
             )
         } catch (e) { alert(e) }
     }
-    const handleKeyDown = (event) => {
+    const handleKeyDown = (e) => {
+        // console.log(e.)
+        if ((e.ctrlKey || e.metaKey) && e.keyCode === 13) { console.log(e.keyCode); handleSubmit() }
         if (content) set(child(typingRef, `${chatRoom.id}/${user.uid}`), { userID: user.displayName })
         else remove(child(typingRef, `${chatRoom.id}/${user.uid}`))
     }
