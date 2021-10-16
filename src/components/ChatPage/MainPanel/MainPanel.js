@@ -5,6 +5,7 @@ import MessageForm from './MessageForm'
 import { connect } from 'react-redux'
 import { getDatabase, ref, onChildAdded, child, onChildRemoved, off } from 'firebase/database'
 import { setUserPosts } from '../../../redux/actions/chatRoom_actions'
+import Skeleton from '../../../commons/components/Skeleton'
 
 export class MainPanel extends Component {
     messageEndRef = React.createRef()
@@ -12,7 +13,7 @@ export class MainPanel extends Component {
         messages: [],
         messageRef: ref(getDatabase(), "messages"),
         typingRef: ref(getDatabase(), "typing"),
-        messageLoading: true,
+        messagesLoading: true,
         searchTerm: "", searchResults: [], searchLoading: false,
         typingUsers: [],
         listenersList: []
@@ -109,12 +110,23 @@ export class MainPanel extends Component {
         typingUsers.length > 0 &&
         typingUsers.map(user => (<span key={user.name.userID}>{user.name.userID} 님이 입력 중입니다...</span>))
 
+    renderMessageSkeleton = (loading) =>
+        loading && (
+            <>
+                {[...Array(5)].map((_, i) => (<Skeleton key={i} />))}
+            </>
+        )
+
     render() {
-        const { messages, searchTerm, searchResults, typingUsers } = this.state
+        const { messages, searchTerm, searchResults, typingUsers, messagesLoading } = this.state
         return (
             <div style={{ padding: '2rem 2rem 0 2rem' }} >
                 <MessageHeader handleSearchChange={this.handleSearchChange} />
-                <div style={{ width: '100%', height: '600px', border: '.2rem solid #ececec', borderRadius: '4px', padding: '1rem', marginBottom: '1rem', overflow: 'auto' }}>
+                <div style={{
+                    width: '100%', height: '600px', border: '.2rem solid #ececec',
+                    borderRadius: '4px', padding: '1rem', marginBottom: '1rem', overflow: 'auto'
+                }}>
+                    {this.renderMessageSkeleton(messagesLoading)}
                     {searchTerm ?
                         this.renderMessage(searchResults) :
                         this.renderMessage(messages)
