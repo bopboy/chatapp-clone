@@ -34,7 +34,7 @@ export class MainPanel extends Component {
     }
     removeListeners = (listeners) => {
         // let { typingRef } = this.state;
-        listeners.forEach(listener => { off(ref(getDatabase(), `typing/${listener.id}`), listener.event) })
+        listeners.forEach(listener => { off(ref(getDatabase(), `messages/${listener.id}`), listener.event) })
         // listeners.forEach(listener => { off(ref(child(typingRef, listener.id)), listener.event) })
     }
     addMessageListener = (chatRoomID) => {

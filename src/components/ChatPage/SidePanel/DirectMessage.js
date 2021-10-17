@@ -58,7 +58,7 @@ export class DirectMessage extends Component {
         return (
             <div>
                 <span style={{ display: 'flex', alignItems: 'center' }}>
-                    <FaRegSmile style={{ marginRight: 3 }} /> DIRECT MESSAGES (1)
+                    <FaRegSmile style={{ marginRight: 3 }} /> DIRECT MESSAGES ({users.length})
                 </span>
                 <ul style={{ listStyleType: 'none', padding: 0 }}>
                     {this.renderDirectMessages(users)}

@@ -137,7 +137,7 @@ export class ChatRooms extends Component {
             <div>
                 <div style={{ position: 'relative', width: '100%', display: 'flex', alignItems: 'center' }}>
                     <FaRegSmileWink style={{ marginRight: 3 }} />
-                    CHAT ROOMS {" "} (1)
+                    CHAT ROOMS {" "} ({this.state.chatRooms.length})
                     <FaPlus style={{ position: 'absolute', right: 0, cursor: 'pointer' }} onClick={this.handleShow} />
                 </div>
                 <ul style={{ listStyleType: 'none', padding: 0 }}>
