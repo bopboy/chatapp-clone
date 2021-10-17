@@ -64,7 +64,6 @@ function MessageForm() {
             uploadTask.on('state_changed',
                 snapshot => {
                     const percentage = Math.round(snapshot.bytesTransferred / snapshot.totalBytes * 100)
-                    console.log(percentage)
                     setPercentage(percentage)
                 },
                 err => {
@@ -73,7 +72,6 @@ function MessageForm() {
                 },
                 () => {
                     getDownloadURL(image).then(url => {
-                        console.log('downloadURL', url)
                         set(push(child(messagesRef, chatRoom.id)), createMessage(url))
                     })
                 }
@@ -81,8 +79,7 @@ function MessageForm() {
         } catch (e) { alert(e) }
     }
     const handleKeyDown = (e) => {
-        // console.log(e.)
-        if ((e.ctrlKey || e.metaKey) && e.keyCode === 13) { console.log(e.keyCode); handleSubmit() }
+        if ((e.ctrlKey || e.metaKey) && e.keyCode === 13) { handleSubmit() }
         if (content) set(child(typingRef, `${chatRoom.id}/${user.uid}`), { userID: user.displayName })
         else remove(child(typingRef, `${chatRoom.id}/${user.uid}`))
     }
